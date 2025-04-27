@@ -56,10 +56,10 @@ class NeuralNetwork:
         self.weights1 += self.learning_rate * np.dot(X.T, self.delta1)
         self.bias1 += self.learning_rate * np.sum(self.delta1, axis=0, keepdims=True)
     
-    def train(self, X: np.ndarray, y: np.ndarray, epochs: int) -> list:
+    def train(self, X: np.ndarray, y: np.ndarray, epocas: int) -> list:
         """Entrena la red neuronal y devuelve el error por época."""
         errors = []
-        for _ in range(epochs):
+        for _ in range(epocas):
             output = self.forward(X)
             self.backward(X, y, output)
             error = np.mean(np.square(y - output))
@@ -110,7 +110,7 @@ class BreastCancerApp:
             self.y = np.array(y).reshape(-1, 1)
             self.feature_names = FEATURE_NAMES
         except FileNotFoundError:
-            messagebox.showerror("Error", "No se encontró el archivo 'wdbc.data'. Asegúrate de descargarlo y colocarlo en el directorio del script.")
+            messagebox.showerror("Error", "No se encontró el archivo 'wdbc.data'. Asegúrate de descargarlo y colocarlo en el mismo directorio")
             self.root.quit()
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar los datos: {str(e)}")
