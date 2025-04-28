@@ -46,14 +46,14 @@ class Perceptron:
                 self.pesos[1] += self.tasa * X[i,1].item() * error
                 self.sesgo += self.tasa * error
             print("Error: ",total_error)
-            errors.append(total_error)  # Acumular el error por época
+            errors.append(total_error)  
         return errors
 
-class BreastCancerApp:
+class clasificacionCancer:
     def __init__(self, root: tk.Tk):
         """Inicializa la aplicación con la interfaz gráfica."""
         self.root = root
-        self.root.title("Clasificación de Cáncer de Mama (Perceptrón)")
+        self.root.title("Clasificación de Cáncer de Mama")
         self.root.geometry("1200x800")
         
         # Cargar dataset manualmente
@@ -268,5 +268,5 @@ class BreastCancerApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = BreastCancerApp(root)
+    app = clasificacionCancer(root)
     root.mainloop()
