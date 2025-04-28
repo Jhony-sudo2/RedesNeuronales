@@ -131,14 +131,14 @@ class BreastCancerApp:
         control_frame.pack(fill="x", padx=10, pady=5)
         
         ttk.Label(control_frame, text="Característica X:").grid(row=0, column=0, padx=5, pady=5)
-        self.feature_x = ttk.Combobox(control_frame, values=self.feature_names, state="readonly")
-        self.feature_x.grid(row=0, column=1, padx=5, pady=5)
-        self.feature_x.set(self.feature_names[0])
+        self.seleccion_x = ttk.Combobox(control_frame, values=self.feature_names, state="readonly")
+        self.seleccion_x.grid(row=0, column=1, padx=5, pady=5)
+        self.seleccion_x.set(self.feature_names[0])
         
         ttk.Label(control_frame, text="Característica Y:").grid(row=0, column=2, padx=5, pady=5)
-        self.feature_y = ttk.Combobox(control_frame, values=self.feature_names, state="readonly")
-        self.feature_y.grid(row=0, column=3, padx=5, pady=5)
-        self.feature_y.set(self.feature_names[1])
+        self.seleccion_y = ttk.Combobox(control_frame, values=self.feature_names, state="readonly")
+        self.seleccion_y.grid(row=0, column=3, padx=5, pady=5)
+        self.seleccion_y.set(self.feature_names[1])
         
         ttk.Button(control_frame, text="Visualizar Datos", command=self.mostrarDatos).grid(row=0, column=4, padx=5, pady=5)
         
@@ -166,8 +166,8 @@ class BreastCancerApp:
     def mostrarDatos(self) -> None:
         """Muestra un scatter plot de los datos seleccionados sin normalizarlos"""
         try:
-            feature_x_idx = list(self.feature_names).index(self.feature_x.get())
-            feature_y_idx = list(self.feature_names).index(self.feature_y.get())
+            feature_x_idx = list(self.feature_names).index(self.seleccion_x.get())
+            feature_y_idx = list(self.feature_names).index(self.seleccion_y.get())
             
             self.ax1.clear()
             scatter = self.ax1.scatter(self.X[:, feature_x_idx], self.X[:, feature_y_idx], 
@@ -200,28 +200,24 @@ class BreastCancerApp:
             )
             
             # Seleccionar solo las dos características para el perceptrón (normalizadas)
-            feature_x_idx = list(self.feature_names).index(self.feature_x.get())
-            feature_y_idx = list(self.feature_names).index(self.feature_y.get())
-            print(f"Característica X seleccionada: {self.feature_x.get()} (índice {feature_x_idx})")
-            print(f"Característica Y seleccionada: {self.feature_y.get()} (índice {feature_y_idx})")
-            self.X_train_2d = self.datosEntreno[:, [feature_x_idx, feature_y_idx]]
-            self.X_test_2d = self.datosPrueba[:, [feature_x_idx, feature_y_idx]]
+            xSeleccionados = list(self.feature_names).index(self.seleccion_x.get())
+            ySeleccionados = list(self.feature_names).index(self.seleccion_y.get())
+            self.datosEntrenamiento = self.datosEntreno[:, [xSeleccionados, ySeleccionados]]
+            self.datosPruebaSE = self.datosPrueba[:, [xSeleccionados, ySeleccionados]]
             
             # También guardar las versiones originales para los gráficos
-            self.X_train_2d_orig = self.X[train_indices][:, [feature_x_idx, feature_y_idx]]
-            self.X_test_2d_orig = self.X[test_indices][:, [feature_x_idx, feature_y_idx]]
-            
+            self.datosPruebaGrafica = self.X[test_indices][:, [xSeleccionados, ySeleccionados]]
             # Inicializar perceptrón
             self.perceptron = Perceptron(input_size=2, tasa=tasa)
             
             # Entrenar perceptrón (con datos normalizados)
-            self.errors = self.perceptron.train(self.X_train_2d, self.solucionEntreno, epocas)
+            self.errors = self.perceptron.train(self.datosEntrenamiento, self.solucionEntreno, epocas)
             
             # Actualizar gráficos
-            self.update_plots(feature_x_idx, feature_y_idx)
+            self.update_plots(xSeleccionados, ySeleccionados)
             
             # Calcular y mostrar exactitud
-            predictions = np.array([self.perceptron.activacion(x) for x in self.X_test_2d])
+            predictions = np.array([self.perceptron.activacion(x) for x in self.datosPruebaSE])
             accuracy = np.mean(predictions == self.solucionPrueba.flatten())
             messagebox.showinfo("Resultado", f"Exactitud en datos de prueba: {accuracy:.2%}")
             
@@ -241,22 +237,10 @@ class BreastCancerApp:
         # Gráfico de la frontera de decisión (transformada al espacio original)
         self.ax3.clear()
         
-        # Definir límites en el espacio normalizado
-        #x_min_normalized = self.datosNormalizados[:, Xseleccionados].min() - 0.1
-        #x_max_normalized = self.datosNormalizados[:, Xseleccionados].max() + 0.1
-        #y_min_normalized = self.datosNormalizados[:, Yseleccionados].min() - 0.1
-        #y_max_normalized = self.datosNormalizados[:, Yseleccionados].max() + 0.1
-
-        x_min = self.X[:, Xseleccionados].min() 
-        x_max = self.X[:, Xseleccionados].max() 
-        y_min = self.X[:, Yseleccionados].min() 
-        y_max = self.X[:, Yseleccionados].max() 
-        
-        # Transformar los límites al espacio original
-        #x_min = self.inverse_normalize(np.array([x_min_normalized]), Xseleccionados)[0]
-        #x_max = self.inverse_normalize(np.array([x_max_normalized]), Xseleccionados)[0]
-        #y_min = self.inverse_normalize(np.array([y_min_normalized]), Yseleccionados)[0]
-        #y_max = self.inverse_normalize(np.array([y_max_normalized]), Yseleccionados)[0]
+        x_min = self.X[:, Xseleccionados].min()-1 
+        x_max = self.X[:, Xseleccionados].max()+1
+        y_min = self.X[:, Yseleccionados].min()-1
+        y_max = self.X[:, Yseleccionados].max()+1
         
         # Crear una malla en el espacio original
         xx_orig, yy_orig = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
@@ -265,7 +249,7 @@ class BreastCancerApp:
         xx_normalized = (xx_orig - self.mins[Xseleccionados]) / (self.maxs[Xseleccionados] - self.mins[Xseleccionados])
         yy_normalized = (yy_orig - self.mins[Yseleccionados]) / (self.maxs[Yseleccionados] - self.mins[Yseleccionados])
         grid_normalized = np.c_[xx_normalized.ravel(), yy_normalized.ravel()]
-        
+
         # Hacer predicciones con el perceptrón (en el espacio normalizado)
         preds = np.array([self.perceptron.activacion(x) for x in grid_normalized]).reshape(xx_orig.shape)
         
@@ -273,7 +257,7 @@ class BreastCancerApp:
         self.ax3.contourf(xx_orig, yy_orig, preds, levels=[0, 0.5, 1], alpha=0.3, cmap="coolwarm")
         
         # Graficar los datos de prueba en el espacio original
-        scatter = self.ax3.scatter(self.X_test_2d_orig[:, 0], self.X_test_2d_orig[:, 1], 
+        scatter = self.ax3.scatter(self.datosPruebaGrafica[:, 0], self.datosPruebaGrafica[:, 1], 
                                  c=self.solucionPrueba.flatten(), cmap="coolwarm", alpha=0.6)
         self.ax3.set_xlabel(self.feature_names[Xseleccionados])
         self.ax3.set_ylabel(self.feature_names[Yseleccionados])
